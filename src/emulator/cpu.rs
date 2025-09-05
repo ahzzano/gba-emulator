@@ -1,4 +1,4 @@
-use crate::emulator::bus::Bus;
+use crate::{emulator::bus::Bus, utils::bit_utils::BitUtils};
 
 const REG_SP: usize = 13;
 const REG_LR: usize = 14;
