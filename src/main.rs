@@ -3,9 +3,14 @@ use raylib::prelude::*;
 const GBA_RES_WIDTH: i32 = 240;
 const GBA_RES_HEIGHT: i32 = 160;
 
+const WIDTH: i32 = 1080;
+const HEIGHT: i32 = 720;
+
+pub mod emulator;
+
 fn main() {
     let (mut rl, thread) = raylib::init()
-        .size(GBA_RES_WIDTH, GBA_RES_HEIGHT)
+        .size(WIDTH, HEIGHT)
         .title("GBA Emulator")
         .build();
 
@@ -19,5 +24,4 @@ fn main() {
         d.clear_background(Color::WHITE);
         d.draw_text("Hello, world!", 12, 12, 20, Color::BLACK);
     }
-
 }
