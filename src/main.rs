@@ -10,9 +10,14 @@ fn main() {
         .build();
 
     while !rl.window_should_close() {
+        if rl.is_key_down(KeyboardKey::KEY_Q) {
+            break;
+        }
+
         let mut d = rl.begin_drawing(&thread);
 
         d.clear_background(Color::WHITE);
         d.draw_text("Hello, world!", 12, 12, 20, Color::BLACK);
     }
+
 }
