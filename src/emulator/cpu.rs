@@ -38,7 +38,7 @@ impl CPU {
     }
 
     pub fn run_instr(&mut self, instr: u32) {
-        let instr_type = (instr >> 25) & 0b111;
+        let instr_type = instr.get_bits(25, 27);
 
         match instr_type {
             0b000 | 0b001 => {
@@ -53,9 +53,9 @@ impl CPU {
 
     fn exec_data_processing(&mut self, instr: u32) {
         let kind = instr.get_bits(25, 27);
-        let rn = (instr >> 16) & 0xF;
-        let rd = (instr >> 12) & 0xF;
-        let opcode = (instr >> 21) & 0xF;
+        let rn = instr.get_bits(12, 15);
+        let rd = instr.get_bits(12, 15);
+        let opcode = instr.get_bits(21, 24);
         println!("Data Processing Instr: {instr:0x}");
         println!("Opcode: {opcode}");
 
