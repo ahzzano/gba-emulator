@@ -32,4 +32,13 @@ impl Default for CPU {
     }
 }
 
-impl CPU {}
+impl CPU {
+    pub fn step() {
+        todo!()
+    }
+
+    pub fn decoder(instr: u32) {
+
+    }
+}
+
