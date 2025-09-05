@@ -78,6 +78,7 @@ impl CPU {
 
         match opcode {
             0b0100 => self.regs[rd as usize] = rn_value + operand,
+            0b1101 => self.regs[rd as usize] = operand,
             _ => {
                 unimplemented!()
             }
@@ -97,7 +98,9 @@ mod test {
         // cpu.run_instr(0x7F0080E2);
         cpu.run_instr(0xE2810020);
         println!("{0:?}", cpu.regs);
-        assert!(cpu.regs[0] == 0x20)
+        assert_eq!(cpu.regs[0], 0x20);
+        cpu.run_instr(0xE1A01000);
+        assert_eq!(cpu.regs[1], 0x20);
     }
 }
 
