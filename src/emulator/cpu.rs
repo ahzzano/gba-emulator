@@ -39,7 +39,6 @@ impl CPU {
 
     pub fn run_instr(&mut self, instr: u32) {
         let instr_type = (instr >> 25) & 0b111;
-        println!("{instr:032b}");
 
         match instr_type {
             0b000 | 0b001 => {
@@ -61,22 +60,22 @@ impl CPU {
         println!("Opcode: {opcode}");
 
         let operand = if (kind & 0x1) == 1 {
+            // immediate
             let imm8 = instr & 0xFF;
+            println!("{imm8:08b}");
             let rot = (instr >> 8) & 0xF;
 
-            // immediate
-            // (imm8 >> (rot * 2)) | (imm8 << 32 - rot * 2)
             imm8.rotate_right(rot * 2)
         } else {
+            // operands
             let rs = instr & 0xF;
             let shift = (instr >> 4) & 0x7;
 
             self.regs[rs as usize]
-            // reg operation
         };
 
         match opcode {
-            0b0100 => self.regs[rd as usize] = rn + operand,
+            0b0100 => self.regs[rd as usize] = self.regs[rn as usize] + operand,
             _ => {
                 unimplemented!()
             }
@@ -95,5 +94,7 @@ mod test {
         // Add Instruction
         // cpu.run_instr(0x7F0080E2);
         cpu.run_instr(0xE2810020);
+        println!("{0:?}", cpu.regs);
+        assert!(cpu.regs[0] == 0x20)
     }
 }
