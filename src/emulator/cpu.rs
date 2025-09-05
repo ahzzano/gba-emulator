@@ -37,8 +37,63 @@ impl CPU {
         todo!()
     }
 
-    pub fn decoder(instr: u32) {
+    pub fn run_instr(&mut self, instr: u32) {
+        let instr_type = (instr >> 25) & 0b111;
+        println!("{instr:032b}");
 
+        match instr_type {
+            0b000 | 0b001 => {
+                self.exec_data_processing(instr);
+            }
+            0b101 => {
+                // BRANCH
+            }
+            _ => unimplemented!(),
+        }
+    }
+
+    fn exec_data_processing(&mut self, instr: u32) {
+        let kind = (instr >> 25) & 0x7;
+        let rn = (instr >> 16) & 0xF;
+        let rd = (instr >> 12) & 0xF;
+        let opcode = (instr >> 21) & 0xF;
+        println!("Data Processing Instr: {instr:0x}");
+        println!("Opcode: {opcode}");
+
+        let operand = if (kind & 0x1) == 1 {
+            let imm8 = instr & 0xFF;
+            let rot = (instr >> 8) & 0xF;
+
+            // immediate
+            // (imm8 >> (rot * 2)) | (imm8 << 32 - rot * 2)
+            imm8.rotate_right(rot * 2)
+        } else {
+            let rs = instr & 0xF;
+            let shift = (instr >> 4) & 0x7;
+
+            self.regs[rs as usize]
+            // reg operation
+        };
+
+        match opcode {
+            0b0100 => self.regs[rd as usize] = rn + operand,
+            _ => {
+                unimplemented!()
+            }
+        }
     }
 }
 
+#[cfg(test)]
+mod test {
+    use crate::emulator::cpu::CPU;
+
+    #[test]
+    fn data_processing() {
+        let mut cpu = CPU::default();
+
+        // Add Instruction
+        // cpu.run_instr(0x7F0080E2);
+        cpu.run_instr(0xE2810020);
+    }
+}
