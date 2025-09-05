@@ -74,8 +74,10 @@ impl CPU {
             self.regs[rs as usize]
         };
 
+        let rn_value = self.regs[rn as usize];
+
         match opcode {
-            0b0100 => self.regs[rd as usize] = self.regs[rn as usize] + operand,
+            0b0100 => self.regs[rd as usize] = rn_value + operand,
             _ => {
                 unimplemented!()
             }
@@ -98,3 +100,4 @@ mod test {
         assert!(cpu.regs[0] == 0x20)
     }
 }
+
