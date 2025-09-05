@@ -15,7 +15,7 @@ fn main() {
         .title("GBA Emulator")
         .build();
 
-    let mut cpu = CPU::default();
+    let cpu = CPU::default();
 
     while !rl.window_should_close() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
