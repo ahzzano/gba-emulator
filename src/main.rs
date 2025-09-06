@@ -2,6 +2,7 @@ use raylib::prelude::*;
 
 pub mod emulator;
 pub mod utils;
+pub mod loader;
 
 use crate::emulator::cpu::CPU;
 
