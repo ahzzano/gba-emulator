@@ -78,7 +78,16 @@ impl CPU {
             0b1001 => self.cpsr.at_bit(FLAG_CARRY) == 0 || self.cpsr.at_bit(FLAG_ZERO) == 1,
             0b1010 => self.cpsr.at_bit(FLAG_SIGN) == self.cpsr.at_bit(FLAG_OVERFLOW),
             0b1011 => self.cpsr.at_bit(FLAG_SIGN) != self.cpsr.at_bit(FLAG_OVERFLOW),
-
+            0b1100 => {
+                self.cpsr.at_bit(FLAG_ZERO) == 0
+                    && (self.cpsr.at_bit(FLAG_OVERFLOW) == self.cpsr.at_bit(FLAG_SIGN))
+            }
+            0b1101 => {
+                self.cpsr.at_bit(FLAG_ZERO) == 1
+                    && (self.cpsr.at_bit(FLAG_OVERFLOW) != self.cpsr.at_bit(FLAG_SIGN))
+            }
+            0b1110 => true,
+            0b1111 => false,
             _ => false,
         }
     }
