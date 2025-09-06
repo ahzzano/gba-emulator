@@ -58,7 +58,7 @@ impl CPU {
 
     fn exec_data_processing(&mut self, instr: u32) {
         let kind = instr.get_bits(25, 27);
-        let rn = instr.get_bits(12, 15);
+        let rn = instr.get_bits(16, 19);
         let rd = instr.get_bits(12, 15);
         let opcode = instr.get_bits(21, 24);
         let s = instr.at_bit(20);
