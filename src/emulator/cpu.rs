@@ -13,7 +13,8 @@ const FLAG_CARRY: usize = 29;
 const FLAG_OVERFLOW: usize = 28;
 
 // Memory Sizes
-const RAM_SIZE: usize = 10;
+// Includes the On-Board work ram and On-Chip work ram
+const RAM_SIZE: usize = 288_000;
 
 // CPU is the struct used to emulate the GBA's CPU.
 //
