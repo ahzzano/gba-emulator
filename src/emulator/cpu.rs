@@ -45,7 +45,11 @@ impl CPU {
     }
 
     pub fn run_instr(&mut self, instr: u32) {
+        let cond = instr.get_bits(28, 31);
         let instr_type = instr.get_bits(25, 27);
+        if !self.can_exec(cond) {
+            return;
+        }
 
         match instr_type {
             0b000 | 0b001 => {
