@@ -4,7 +4,12 @@ const REG_SP: usize = 13;
 const REG_LR: usize = 14;
 const REG_PC: usize = 15;
 
-//
+// FLAGS
+const FLAG_SIGN: usize = 31;
+const FLAG_ZERO: usize = 30;
+const FLAG_CARRY: usize = 29;
+const FLAG_OVERFLOW: usize = 28;
+
 // CPU is the struct used to emulate the GBA's CPU.
 //
 // Main Ref: https://problemkaputt.de/gbatek.htm#arminstructionsummary
