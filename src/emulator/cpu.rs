@@ -59,6 +59,10 @@ impl CPU {
         }
     }
 
+    fn can_exec(&self, cond: u32) -> bool {
+        false
+    }
+
     fn exec_branch(&mut self, instr: u32) {
         let link = instr.at_bit(24);
         let imm24 = instr.get_bits(0, 23);
