@@ -1,6 +1,9 @@
 use std::{fs::File, io::Read, mem::offset_of};
 
-use crate::{emulator::bus::Bus, utils::bit_utils::BitUtils};
+use crate::{
+    emulator::bus::Bus,
+    utils::bit_utils::{BitSetUtils, BitUtils},
+};
 
 const REG_SP: usize = 13;
 const REG_LR: usize = 14;
@@ -194,6 +197,16 @@ impl CPU {
                     todo!("Implement SUBS, ADDS, and MOVS respectively");
                 }
             }
+            0b1010 => {
+                let value = rn_value as i32 - operand as i32;
+                self.cpsr.set_bit(FLAG_SIGN, value < 0);
+                self.cpsr.set_bit(FLAG_ZERO, value == 0);
+                self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                self.cpsr.set_bit(
+                    FLAG_OVERFLOW,
+                    ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
+                );
+            }
             _ => {
                 unimplemented!()
             }
@@ -205,7 +218,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::emulator::cpu::{CPU, REG_LR, REG_PC, REG_SP};
+    use crate::{emulator::cpu::{CPU, FLAG_ZERO, REG_LR, REG_PC, REG_SP}, utils::bit_utils::BitUtils};
 
     #[test]
     fn data_processing() {
@@ -263,4 +276,19 @@ mod test {
         assert_eq!(cpu.read_ram_u32(0x03000026), 0x69420);
     }
 
+    #[test]
+    fn cmp_tests() {
+        let mut cpu = CPU::default();
+        
+        cpu.regs[0] = 1;
+        cpu.regs[1] = 1;
+
+        cpu.run_instr(0xE1500001);
+        assert_eq!(cpu.cpsr.at_bit(FLAG_ZERO), 1);
+
+        cpu.regs[1] = 1;
+        cpu.regs[2] = 2;
+        cpu.run_instr(0xE1510002);
+        assert_eq!(cpu.cpsr.at_bit(FLAG_ZERO), 0);
+    }
 }
