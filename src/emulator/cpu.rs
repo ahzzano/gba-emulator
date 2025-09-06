@@ -12,6 +12,10 @@ const FLAG_ZERO: usize = 30;
 const FLAG_CARRY: usize = 29;
 const FLAG_OVERFLOW: usize = 28;
 
+// Memory Sizes
+const ROM_SIZE: usize = 10;
+const RAM_SIZE: usize = 10;
+
 // CPU is the struct used to emulate the GBA's CPU.
 //
 // Main Ref: https://problemkaputt.de/gbatek.htm#arminstructionsummary
@@ -21,6 +25,9 @@ pub struct CPU {
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
+    rom: [u8; ROM_SIZE],
+    ram: [u8; RAM_SIZE],
+
 }
 
 impl Default for CPU {
@@ -30,6 +37,8 @@ impl Default for CPU {
             cpsr: 0x6000_001F,
             spsr: [0; 6],
             bus: Box::new(Bus::default()),
+            rom: [0; ROM_SIZE],
+            ram: [0; RAM_SIZE],
         };
 
         to_ret.regs[REG_SP] = 0x03007F00;
