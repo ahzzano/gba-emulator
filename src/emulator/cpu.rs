@@ -53,6 +53,7 @@ impl CPU {
             }
             0b101 => {
                 // BRANCH
+                self.exec_branch(instr);
             }
             _ => unimplemented!(),
         }
@@ -62,16 +63,15 @@ impl CPU {
         let link = instr.at_bit(24);
         let imm24 = instr.get_bits(0, 23);
 
-        let offset = (((imm24 as i32) << 8) >> 6) as u32;
+        let offset = ((imm24 as i32) << 8) >> 6;
 
         let current_pc = self.regs[REG_PC];
-        let next_pc = current_pc + 8;
 
         if link == 1 {
-           self.regs[REG_LR] = next_pc - 4;
+            self.regs[REG_LR] = current_pc.wrapping_add(4);
         }
 
-        self.regs[REG_PC] = next_pc.wrapping_add(offset);
+        self.regs[REG_PC] = (current_pc as i32).wrapping_add(offset + 8) as u32;
     }
 
     fn exec_data_processing(&mut self, instr: u32) {
@@ -109,7 +109,7 @@ impl CPU {
                 if flag && s != 0 {
                     todo!("Implement SUBS, ADDS, and MOVS respectively");
                 }
-            },
+            }
             _ => {
                 unimplemented!()
             }
@@ -121,7 +121,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::emulator::cpu::{CPU, REG_SP};
+    use crate::emulator::cpu::{CPU, REG_PC, REG_SP};
 
     #[test]
     fn data_processing() {
@@ -144,10 +144,9 @@ mod test {
     fn branch() {
         let mut cpu = CPU::default();
 
+        let current_sp = cpu.regs[REG_PC];
         cpu.run_instr(0xEA000001);
-        println!("{0:?}", cpu.regs);
-        assert_eq!(cpu.regs[REG_SP], 12);
+        assert_eq!(cpu.regs[REG_PC], current_sp + 12);
     }
-
-
 }
+
