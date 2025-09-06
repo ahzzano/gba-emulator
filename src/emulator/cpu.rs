@@ -45,7 +45,11 @@ impl CPU {
     }
 
     pub fn run_instr(&mut self, instr: u32) {
+        let cond = instr.get_bits(28, 31);
         let instr_type = instr.get_bits(25, 27);
+        if !self.can_exec(cond) {
+            return;
+        }
 
         match instr_type {
             0b000 | 0b001 => {
@@ -56,6 +60,35 @@ impl CPU {
                 self.exec_branch(instr);
             }
             _ => unimplemented!(),
+        }
+    }
+
+    fn can_exec(&self, cond: u32) -> bool {
+        match cond {
+            // Z = 1
+            0b0000 => self.cpsr.at_bit(FLAG_ZERO) == 1,
+            0b0001 => self.cpsr.at_bit(FLAG_ZERO) == 0,
+            0b0010 => self.cpsr.at_bit(FLAG_CARRY) == 1,
+            0b0011 => self.cpsr.at_bit(FLAG_CARRY) == 0,
+            0b0100 => self.cpsr.at_bit(FLAG_SIGN) == 1,
+            0b0101 => self.cpsr.at_bit(FLAG_SIGN) == 0,
+            0b0110 => self.cpsr.at_bit(FLAG_OVERFLOW) == 1,
+            0b0111 => self.cpsr.at_bit(FLAG_OVERFLOW) == 0,
+            0b1000 => self.cpsr.at_bit(FLAG_CARRY) == 1 && self.cpsr.at_bit(FLAG_ZERO) == 0,
+            0b1001 => self.cpsr.at_bit(FLAG_CARRY) == 0 || self.cpsr.at_bit(FLAG_ZERO) == 1,
+            0b1010 => self.cpsr.at_bit(FLAG_SIGN) == self.cpsr.at_bit(FLAG_OVERFLOW),
+            0b1011 => self.cpsr.at_bit(FLAG_SIGN) != self.cpsr.at_bit(FLAG_OVERFLOW),
+            0b1100 => {
+                self.cpsr.at_bit(FLAG_ZERO) == 0
+                    && (self.cpsr.at_bit(FLAG_OVERFLOW) == self.cpsr.at_bit(FLAG_SIGN))
+            }
+            0b1101 => {
+                self.cpsr.at_bit(FLAG_ZERO) == 1
+                    && (self.cpsr.at_bit(FLAG_OVERFLOW) != self.cpsr.at_bit(FLAG_SIGN))
+            }
+            0b1110 => true,
+            0b1111 => false,
+            _ => false,
         }
     }
 
@@ -155,4 +188,3 @@ mod test {
         assert_eq!(cpu.regs[REG_LR], current_sp + 4)
     }
 }
-
