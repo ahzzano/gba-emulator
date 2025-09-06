@@ -60,6 +60,15 @@ impl CPU {
         file.read_to_end(&mut self.rom).expect("Error reading file");
     }
 
+    pub fn write_ram_u8(&mut self, addr: u32, value: u8) {
+        match addr {
+            0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize] = value,
+            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000 + 0x02000000) as usize] = value,
+            0x08000000..=0x0DFFFFFF => self.rom[(addr - 0x08000000) as usize] = value,
+            _ => (),
+        }
+    }
+
     pub fn read_ram_u32(&self, addr: u32) -> u32 {
         u32::from_le_bytes([
             self.read_ram_u8(addr),
@@ -220,5 +229,26 @@ mod test {
 
         cpu.run_instr(0xEB000001);
         assert_eq!(cpu.regs[REG_LR], current_sp + 4)
+    }
+
+    #[test]
+    fn ram_reads() {
+        let mut cpu = CPU::default();
+
+        cpu.write_ram_u8(0x02000000, 0x69);
+        cpu.write_ram_u8(0x02000001, 0x48);
+        cpu.write_ram_u8(0x0203FFFF, 0x69);
+
+        assert_eq!(cpu.read_ram_u8(0x02000000), 0x69);
+        assert_eq!(cpu.read_ram_u8(0x02000001), 0x48);
+        assert_eq!(cpu.read_ram_u8(0x0203FFFF), 0x69);
+
+        cpu.write_ram_u8(0x03000000, 0x69);
+        cpu.write_ram_u8(0x03000001, 0x48);
+        cpu.write_ram_u8(0x03007FFF, 0x69);
+
+        assert_eq!(cpu.read_ram_u8(0x03000000), 0x69);
+        assert_eq!(cpu.read_ram_u8(0x03000001), 0x48);
+        assert_eq!(cpu.read_ram_u8(0x03007FFF), 0x69);
     }
 }
