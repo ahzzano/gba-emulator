@@ -25,12 +25,11 @@ pub struct CPU {
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
-    // The GamePak / Cartridge ROM 
+    // The GamePak / Cartridge ROM
     rom: Vec<u8>,
 
     // the RAM of the GBA
     ram: [u8; RAM_SIZE],
-
 }
 
 impl Default for CPU {
@@ -41,7 +40,7 @@ impl Default for CPU {
             spsr: [0; 6],
             bus: Box::new(Bus::default()),
             ram: [0; RAM_SIZE],
-            rom: vec![0]
+            rom: vec![0],
         };
 
         to_ret.regs[REG_SP] = 0x03007F00;
@@ -59,6 +58,24 @@ impl CPU {
     pub fn load_rom(&mut self, mut file: File) {
         self.rom.clear();
         file.read_to_end(&mut self.rom).expect("Error reading file");
+    }
+
+    pub fn read_ram_u32(&self, addr: u32) -> u32 {
+        u32::from_le_bytes([
+            self.read_ram_u8(addr),
+            self.read_ram_u8(addr + 1),
+            self.read_ram_u8(addr + 2),
+            self.read_ram_u8(addr + 3),
+        ])
+    }
+
+    pub fn read_ram_u8(&self, addr: u32) -> u8 {
+        match addr {
+            0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize],
+            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000) as usize],
+            0x08000000..=0x0DFFFFFF => self.rom[(addr - 0x08000000) as usize],
+            _ => 0,
+        }
     }
 
     pub fn run_instr(&mut self, instr: u32) {
