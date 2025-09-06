@@ -53,6 +53,14 @@ impl CPU {
         todo!()
     }
 
+    pub fn write_u8(&mut self, value: u8) {
+
+    }
+
+    pub fn read_u8(&mut self) {
+
+    }
+
     pub fn run_instr(&mut self, instr: u32) {
         let cond = instr.get_bits(28, 31);
         let instr_type = instr.get_bits(25, 27);
