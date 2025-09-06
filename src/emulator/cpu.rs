@@ -72,7 +72,7 @@ impl CPU {
     pub fn read_ram_u8(&self, addr: u32) -> u8 {
         match addr {
             0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize],
-            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000) as usize],
+            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000 + 0x02000000) as usize],
             0x08000000..=0x0DFFFFFF => self.rom[(addr - 0x08000000) as usize],
             _ => 0,
         }
