@@ -3,9 +3,8 @@ use std::fs::{self, File};
 
 pub mod emulator;
 pub mod utils;
-pub mod loader;
 
-use crate::{emulator::cpu::CPU, loader::load_file};
+use crate::emulator::cpu::CPU;
 
 const GBA_RES_WIDTH: i32 = 240;
 const GBA_RES_HEIGHT: i32 = 160;
@@ -16,7 +15,6 @@ const HEIGHT: i32 = 720;
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let filepath = &args[1];
-
 
     let (mut rl, thread) = raylib::init()
         .size(WIDTH, HEIGHT)
