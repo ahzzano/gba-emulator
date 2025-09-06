@@ -147,6 +147,9 @@ mod test {
         let current_sp = cpu.regs[REG_PC];
         cpu.run_instr(0xEA000001);
         assert_eq!(cpu.regs[REG_PC], current_sp + 12);
+
+        cpu.run_instr(0xEAFFFFFB);
+        assert_eq!(cpu.regs[REG_PC], current_sp);
     }
 }
 
