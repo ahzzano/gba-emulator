@@ -1,4 +1,4 @@
-use std::mem::offset_of;
+use std::{fs::File, io::Read, mem::offset_of};
 
 use crate::{emulator::bus::Bus, utils::bit_utils::BitUtils};
 
@@ -12,6 +12,10 @@ const FLAG_ZERO: usize = 30;
 const FLAG_CARRY: usize = 29;
 const FLAG_OVERFLOW: usize = 28;
 
+// Memory Sizes
+// Includes the On-Board work ram and On-Chip work ram
+const RAM_SIZE: usize = 294_912;
+
 // CPU is the struct used to emulate the GBA's CPU.
 //
 // Main Ref: https://problemkaputt.de/gbatek.htm#arminstructionsummary
@@ -21,6 +25,11 @@ pub struct CPU {
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
+    // The GamePak / Cartridge ROM
+    rom: Vec<u8>,
+
+    // the RAM of the GBA
+    ram: [u8; RAM_SIZE],
 }
 
 impl Default for CPU {
@@ -30,6 +39,8 @@ impl Default for CPU {
             cpsr: 0x6000_001F,
             spsr: [0; 6],
             bus: Box::new(Bus::default()),
+            ram: [0; RAM_SIZE],
+            rom: vec![0],
         };
 
         to_ret.regs[REG_SP] = 0x03007F00;
@@ -42,6 +53,46 @@ impl Default for CPU {
 impl CPU {
     pub fn step() {
         todo!()
+    }
+
+    pub fn load_rom(&mut self, mut file: File) {
+        self.rom.clear();
+        file.read_to_end(&mut self.rom).expect("Error reading file");
+    }
+
+    pub fn write_ram_u8(&mut self, addr: u32, value: u8) {
+        let len1 = 0x0203FFFF - 0x02000000 + 1;
+        match addr {
+            0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize] = value,
+            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000 + 262144) as usize] = value,
+            0x08000000..=0x0DFFFFFF => self.rom[(addr - 0x08000000) as usize] = value,
+            _ => (),
+        }
+    }
+
+    pub fn read_ram_u32(&self, addr: u32) -> u32 {
+        u32::from_le_bytes([
+            self.read_ram_u8(addr),
+            self.read_ram_u8(addr + 1),
+            self.read_ram_u8(addr + 2),
+            self.read_ram_u8(addr + 3),
+        ])
+    }
+
+    pub fn write_ram_u32(&mut self, addr: u32, value: u32) {
+        let bytes = value.to_le_bytes();
+        for (index, value) in bytes.iter().enumerate() {
+            self.write_ram_u8(addr + index as u32, *value);
+        }
+    }
+
+    pub fn read_ram_u8(&self, addr: u32) -> u8 {
+        match addr {
+            0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize],
+            0x03000000..=0x03007FFF => self.ram[(addr - 0x03000000 + 262144) as usize],
+            0x08000000..=0x0DFFFFFF => self.rom[(addr - 0x08000000) as usize],
+            _ => 0,
+        }
     }
 
     pub fn run_instr(&mut self, instr: u32) {
@@ -187,4 +238,29 @@ mod test {
         cpu.run_instr(0xEB000001);
         assert_eq!(cpu.regs[REG_LR], current_sp + 4)
     }
+
+    #[test]
+    fn ram_reads() {
+        let mut cpu = CPU::default();
+
+        cpu.write_ram_u8(0x02000000, 0x69);
+        cpu.write_ram_u8(0x02000001, 0x48);
+        cpu.write_ram_u8(0x0203FFFF, 0x69);
+
+        assert_eq!(cpu.read_ram_u8(0x02000000), 0x69);
+        assert_eq!(cpu.read_ram_u8(0x02000001), 0x48);
+        assert_eq!(cpu.read_ram_u8(0x0203FFFF), 0x69);
+
+        cpu.write_ram_u8(0x03000000, 0x69);
+        cpu.write_ram_u8(0x03000001, 0x48);
+        cpu.write_ram_u8(0x03007FFF, 0x69);
+
+        assert_eq!(cpu.read_ram_u8(0x03000000), 0x69);
+        assert_eq!(cpu.read_ram_u8(0x03000001), 0x48);
+        assert_eq!(cpu.read_ram_u8(0x03007FFF), 0x69);
+
+        cpu.write_ram_u32(0x03000026, 0x69420);
+        assert_eq!(cpu.read_ram_u32(0x03000026), 0x69420);
+    }
+
 }

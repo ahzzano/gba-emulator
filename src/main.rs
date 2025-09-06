@@ -1,4 +1,5 @@
 use raylib::prelude::*;
+use std::fs::{self, File};
 
 pub mod emulator;
 pub mod utils;
@@ -12,12 +13,19 @@ const WIDTH: i32 = 1080;
 const HEIGHT: i32 = 720;
 
 fn main() {
+    let args: Vec<String> = std::env::args().collect();
+    let filepath = &args[1];
+
     let (mut rl, thread) = raylib::init()
         .size(WIDTH, HEIGHT)
         .title("GBA Emulator")
         .build();
 
-    let cpu = CPU::default();
+    let mut cpu = CPU::default();
+
+    // let binary = fs::read(filepath).expect("File does not exist");
+    let binary = File::open(filepath).expect("File does not exist");
+    cpu.load_rom(binary);
 
     while !rl.window_should_close() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
