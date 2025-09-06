@@ -64,7 +64,18 @@ impl CPU {
     }
 
     fn can_exec(&self, cond: u32) -> bool {
-        false
+        match cond {
+            // Z = 1
+            0b000 => self.cpsr.at_bit(FLAG_ZERO) == 1,
+            0b001 => self.cpsr.at_bit(FLAG_ZERO) == 0,
+            0b010 => self.cpsr.at_bit(FLAG_CARRY) == 1,
+            0b011 => self.cpsr.at_bit(FLAG_CARRY) == 0,
+            0b100 => self.cpsr.at_bit(FLAG_SIGN) == 1,
+            0b101 => self.cpsr.at_bit(FLAG_SIGN) == 0,
+            0b110 => self.cpsr.at_bit(FLAG_OVERFLOW) == 1,
+            0b111 => self.cpsr.at_bit(FLAG_OVERFLOW) == 0,
+            _ => false,
+        }
     }
 
     fn exec_branch(&mut self, instr: u32) {
@@ -163,4 +174,3 @@ mod test {
         assert_eq!(cpu.regs[REG_LR], current_sp + 4)
     }
 }
-
