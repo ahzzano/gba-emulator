@@ -61,6 +61,7 @@ impl CPU {
         let rn = instr.get_bits(12, 15);
         let rd = instr.get_bits(12, 15);
         let opcode = instr.get_bits(21, 24);
+        let s = instr.at_bit(20);
         println!("Data Processing Instr: {instr:0x}");
         println!("Opcode: {opcode}");
 
@@ -87,8 +88,8 @@ impl CPU {
             0b0010 => {
                 let (value, flag) = rn_value.overflowing_sub(operand);
                 self.regs[rd as usize] = value;
-                if flag {
-                    todo!();
+                if flag && s != 0 {
+                    todo!("Implement SUBS, ADDS, and MOVS respectively");
                 }
             },
             _ => {
