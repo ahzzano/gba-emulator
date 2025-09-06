@@ -1,4 +1,4 @@
-use std::mem::offset_of;
+use std::{fs::File, io::Read, mem::offset_of};
 
 use crate::{emulator::bus::Bus, utils::bit_utils::BitUtils};
 
@@ -13,7 +13,6 @@ const FLAG_CARRY: usize = 29;
 const FLAG_OVERFLOW: usize = 28;
 
 // Memory Sizes
-const ROM_SIZE: usize = 10;
 const RAM_SIZE: usize = 10;
 
 // CPU is the struct used to emulate the GBA's CPU.
@@ -25,7 +24,10 @@ pub struct CPU {
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
-    rom: [u8; ROM_SIZE],
+    // The GamePak / Cartridge ROM 
+    rom: Vec<u8>,
+
+    // the RAM of the GBA
     ram: [u8; RAM_SIZE],
 
 }
@@ -37,8 +39,8 @@ impl Default for CPU {
             cpsr: 0x6000_001F,
             spsr: [0; 6],
             bus: Box::new(Bus::default()),
-            rom: [0; ROM_SIZE],
             ram: [0; RAM_SIZE],
+            rom: vec![0]
         };
 
         to_ret.regs[REG_SP] = 0x03007F00;
@@ -53,12 +55,9 @@ impl CPU {
         todo!()
     }
 
-    pub fn write_ram_u8(&mut self, value: u8) {
-
-    }
-
-    pub fn read_rom_u8(&mut self) {
-
+    pub fn load_rom(&mut self, mut file: File) {
+        self.rom.clear();
+        file.read_to_end(&mut self.rom).expect("Error reading file");
     }
 
     pub fn run_instr(&mut self, instr: u32) {

@@ -1,5 +1,5 @@
 use raylib::prelude::*;
-use std::fs;
+use std::fs::{self, File};
 
 pub mod emulator;
 pub mod utils;
@@ -25,8 +25,9 @@ fn main() {
 
     let mut cpu = CPU::default();
 
-    let binary = fs::read(filepath).expect("File does not exist");
-    load_file(&mut cpu, binary);
+    // let binary = fs::read(filepath).expect("File does not exist");
+    let binary = File::open(filepath).expect("File does not exist");
+    cpu.load_rom(binary);
 
     while !rl.window_should_close() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
