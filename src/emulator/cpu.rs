@@ -121,7 +121,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::emulator::cpu::{CPU, REG_PC, REG_SP};
+    use crate::emulator::cpu::{CPU, REG_LR, REG_PC, REG_SP};
 
     #[test]
     fn data_processing() {
@@ -150,6 +150,9 @@ mod test {
 
         cpu.run_instr(0xEAFFFFFB);
         assert_eq!(cpu.regs[REG_PC], current_sp);
+
+        cpu.run_instr(0xEB000001);
+        assert_eq!(cpu.regs[REG_LR], current_sp + 4)
     }
 }
 
