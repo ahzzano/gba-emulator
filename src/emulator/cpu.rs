@@ -1,3 +1,5 @@
+use std::mem::offset_of;
+
 use crate::{emulator::bus::Bus, utils::bit_utils::BitUtils};
 
 const REG_SP: usize = 13;
@@ -56,6 +58,22 @@ impl CPU {
         }
     }
 
+    fn exec_branch(&mut self, instr: u32) {
+        let link = instr.at_bit(24);
+        let imm24 = instr.get_bits(0, 23);
+
+        let offset = (((imm24 as i32) << 8) >> 6) as u32;
+
+        let current_pc = self.regs[REG_PC];
+        let next_pc = current_pc + 8;
+
+        if link == 1 {
+           self.regs[REG_LR] = next_pc - 4;
+        }
+
+        self.regs[REG_PC] = current_pc.wrapping_add(offset);
+    }
+
     fn exec_data_processing(&mut self, instr: u32) {
         let kind = instr.get_bits(25, 27);
         let rn = instr.get_bits(16, 19);
@@ -96,6 +114,8 @@ impl CPU {
                 unimplemented!()
             }
         }
+
+        self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
     }
 }
 
