@@ -4,7 +4,6 @@ pub mod emulator;
 pub mod utils;
 
 use crate::emulator::cpu::CPU;
-use crate::utils::bit_utils::BitUtils;
 
 const GBA_RES_WIDTH: i32 = 240;
 const GBA_RES_HEIGHT: i32 = 160;

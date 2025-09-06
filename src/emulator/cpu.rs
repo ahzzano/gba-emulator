@@ -79,6 +79,13 @@ impl CPU {
         match opcode {
             0b0100 => self.regs[rd as usize] = rn_value + operand,
             0b1101 => self.regs[rd as usize] = operand,
+            0b0010 => {
+                let (value, flag) = rn_value.overflowing_sub(operand);
+                self.regs[rd as usize] = value;
+                if flag {
+                    todo!();
+                }
+            },
             _ => {
                 unimplemented!()
             }
@@ -97,10 +104,13 @@ mod test {
         // Add Instruction
         // cpu.run_instr(0x7F0080E2);
         cpu.run_instr(0xE2810020);
-        println!("{0:?}", cpu.regs);
         assert_eq!(cpu.regs[0], 0x20);
+
         cpu.run_instr(0xE1A01000);
         assert_eq!(cpu.regs[1], 0x20);
+
+        cpu.run_instr(0xE2414005);
+        println!("{0:?}", cpu.regs);
+        assert_eq!(cpu.regs[4], 0x20 - 0x05);
     }
 }
-
