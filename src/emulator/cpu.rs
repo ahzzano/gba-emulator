@@ -79,6 +79,13 @@ impl CPU {
         ])
     }
 
+    pub fn write_ram_u32(&mut self, addr: u32, value: u32) {
+        let bytes = value.to_le_bytes();
+        for (index, value) in bytes.iter().enumerate() {
+            self.write_ram_u8(addr + index as u32, *value);
+        }
+    }
+
     pub fn read_ram_u8(&self, addr: u32) -> u8 {
         match addr {
             0x02000000..=0x0203FFFF => self.ram[(addr - 0x02000000) as usize],
@@ -251,5 +258,9 @@ mod test {
         assert_eq!(cpu.read_ram_u8(0x03000000), 0x69);
         assert_eq!(cpu.read_ram_u8(0x03000001), 0x48);
         assert_eq!(cpu.read_ram_u8(0x03007FFF), 0x69);
+
+        cpu.write_ram_u32(0x03000026, 0x69420);
+        assert_eq!(cpu.read_ram_u32(0x03000026), 0x69420);
     }
+
 }
