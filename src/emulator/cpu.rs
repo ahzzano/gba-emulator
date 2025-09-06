@@ -71,7 +71,7 @@ impl CPU {
            self.regs[REG_LR] = next_pc - 4;
         }
 
-        self.regs[REG_PC] = current_pc.wrapping_add(offset);
+        self.regs[REG_PC] = next_pc.wrapping_add(offset);
     }
 
     fn exec_data_processing(&mut self, instr: u32) {
@@ -121,7 +121,7 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::emulator::cpu::CPU;
+    use crate::emulator::cpu::{CPU, REG_SP};
 
     #[test]
     fn data_processing() {
@@ -139,4 +139,15 @@ mod test {
         println!("{0:?}", cpu.regs);
         assert_eq!(cpu.regs[4], 0x20 - 0x05);
     }
+
+    #[test]
+    fn branch() {
+        let mut cpu = CPU::default();
+
+        cpu.run_instr(0xEA000001);
+        println!("{0:?}", cpu.regs);
+        assert_eq!(cpu.regs[REG_SP], 12);
+    }
+
+
 }
