@@ -53,11 +53,11 @@ impl CPU {
         todo!()
     }
 
-    pub fn write_u8(&mut self, value: u8) {
+    pub fn write_ram_u8(&mut self, value: u8) {
 
     }
 
-    pub fn read_u8(&mut self) {
+    pub fn read_rom_u8(&mut self) {
 
     }
 
