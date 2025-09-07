@@ -55,7 +55,7 @@ impl Default for CPU {
 
 impl CPU {
     pub fn step(&mut self) {
-        let current_instr = self.read_ram_u32(self.regs[REG_SP]).to_be();
+        let current_instr = self.read_ram_u32(self.regs[REG_PC]).to_be();
         println!("{current_instr:08x}");
         self.run_instr(current_instr);
     }
