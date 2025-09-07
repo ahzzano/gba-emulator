@@ -12,7 +12,7 @@ impl BitSetUtils for u32 {
         if value {
             (1 << pos) | self
         } else {
-            !(1 << pos) & self
+            (!(1 << pos)) & self
         }
     }
 }

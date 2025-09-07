@@ -198,11 +198,12 @@ impl CPU {
                 }
             }
             0b1010 => {
+                // CMP Instruction
                 let value = rn_value as i32 - operand as i32;
-                self.cpsr.set_bit(FLAG_SIGN, value < 0);
-                self.cpsr.set_bit(FLAG_ZERO, value == 0);
-                self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
-                self.cpsr.set_bit(
+                self.cpsr = self.cpsr.set_bit(FLAG_SIGN, value < 0);
+                self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                self.cpsr =  self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                self.cpsr = self.cpsr.set_bit(
                     FLAG_OVERFLOW,
                     ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
                 );
@@ -286,7 +287,6 @@ mod test {
         cpu.run_instr(0xE1500001);
         assert_eq!(cpu.cpsr.at_bit(FLAG_ZERO), 1);
 
-        cpu.regs[1] = 1;
         cpu.regs[2] = 2;
         cpu.run_instr(0xE1510002);
         assert_eq!(cpu.cpsr.at_bit(FLAG_ZERO), 0);
