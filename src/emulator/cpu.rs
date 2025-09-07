@@ -198,6 +198,7 @@ impl CPU {
                 }
             }
             0b0101 => self.regs[rd as usize] = rn_value + operand + self.cpsr.at_bit(FLAG_CARRY),
+            0b0110 => self.regs[rd as usize] = rn_value - operand + self.cpsr.at_bit(FLAG_CARRY) - 1,
             0b1010 => {
                 // CMP Instruction
                 let value = rn_value as i32 - operand as i32;
@@ -314,5 +315,13 @@ mod test {
         cpu.run_instr(0xE0A11002);
         println!("{0:?}", cpu.regs);
         assert_eq!(cpu.regs[1], 2);
+
+        cpu.run_instr(0xE0C11002);
+        assert_eq!(cpu.regs[1], 0);
+
+        cpu.regs[1] = 1;
+        cpu.regs[2] = 1;
+        cpu.cpsr = cpu.cpsr.set_bit(FLAG_CARRY, true);
+        assert_eq!(cpu.regs[1], 1);
     }
 }
