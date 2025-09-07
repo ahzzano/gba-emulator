@@ -56,12 +56,21 @@ impl Default for CPU {
 impl CPU {
     pub fn step(&mut self) {
         let current_instr = self.read_ram_u32(self.regs[REG_SP]).to_be();
+        println!("{current_instr:08x}");
         self.run_instr(current_instr);
     }
 
     pub fn load_rom(&mut self, mut file: File) {
         self.rom.clear();
         file.read_to_end(&mut self.rom).expect("Error reading file");
+    }
+
+    pub fn load_rom_bytes(&mut self, vec: Vec<u32>) {
+        self.rom = vec
+            .iter()
+            .map(|v_u32| v_u32.to_le_bytes().to_vec())
+            .flatten()
+            .collect();
     }
 
     pub fn write_ram_u8(&mut self, addr: u32, value: u8) {
@@ -336,9 +345,9 @@ mod test {
         // Load 1 into r2
         // r1 = 2
         // r2 = 3
-        for (index, instr) in [0x011081E2, 0x012082E2, 0x021081E0, 0x012082E0].iter().enumerate() {
-            cpu.write_ram_u32(0x8000_0000 + index as u32, *instr);
-        }
+        cpu.load_rom_bytes(vec![0x011081E2, 0x012082E2, 0x021081E0, 0x012082E0]);
+
+        println!("{0:?}", cpu.rom);
 
         for i in 0..4 {
             cpu.step();
