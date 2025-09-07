@@ -197,12 +197,13 @@ impl CPU {
                     todo!("Implement SUBS, ADDS, and MOVS respectively");
                 }
             }
+            0b0101 => self.regs[rd as usize] = rn_value + operand + self.cpsr.at_bit(FLAG_CARRY),
             0b1010 => {
                 // CMP Instruction
                 let value = rn_value as i32 - operand as i32;
                 self.cpsr = self.cpsr.set_bit(FLAG_SIGN, value < 0);
                 self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
-                self.cpsr =  self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
                 self.cpsr = self.cpsr.set_bit(
                     FLAG_OVERFLOW,
                     ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
@@ -219,7 +220,10 @@ impl CPU {
 
 #[cfg(test)]
 mod test {
-    use crate::{emulator::cpu::{CPU, FLAG_ZERO, REG_LR, REG_PC, REG_SP}, utils::bit_utils::BitUtils};
+    use crate::{
+        emulator::cpu::{CPU, FLAG_CARRY, FLAG_ZERO, REG_LR, REG_PC, REG_SP},
+        utils::bit_utils::{BitSetUtils, BitUtils},
+    };
 
     #[test]
     fn data_processing() {
@@ -280,7 +284,7 @@ mod test {
     #[test]
     fn cmp_tests() {
         let mut cpu = CPU::default();
-        
+
         cpu.regs[0] = 1;
         cpu.regs[1] = 1;
 
@@ -290,5 +294,25 @@ mod test {
         cpu.regs[2] = 2;
         cpu.run_instr(0xE1510002);
         assert_eq!(cpu.cpsr.at_bit(FLAG_ZERO), 0);
+    }
+
+    #[test]
+    fn carry_intructions() {
+        let mut cpu = CPU::default();
+
+        cpu.cpsr.set_bit(FLAG_CARRY, true);
+        cpu.regs[1] = 1;
+        cpu.regs[2] = 1;
+
+        cpu.run_instr(0xE0A11002);
+        assert_eq!(cpu.regs[1], 3);
+
+        cpu.regs[1] = 1;
+        cpu.regs[2] = 1;
+        cpu.cpsr.set_bit(FLAG_CARRY, false);
+
+        cpu.run_instr(0xE0A11002);
+        println!("{0:?}", cpu.regs);
+        assert_eq!(cpu.regs[1], 2);
     }
 }
