@@ -54,8 +54,9 @@ impl Default for CPU {
 }
 
 impl CPU {
-    pub fn step() {
-        todo!()
+    pub fn step(&mut self) {
+        let current_instr = self.read_ram_u32(self.regs[REG_SP]).to_be();
+        self.run_instr(current_instr);
     }
 
     pub fn load_rom(&mut self, mut file: File) {
@@ -198,7 +199,9 @@ impl CPU {
                 }
             }
             0b0101 => self.regs[rd as usize] = rn_value + operand + self.cpsr.at_bit(FLAG_CARRY),
-            0b0110 => self.regs[rd as usize] = rn_value - operand + self.cpsr.at_bit(FLAG_CARRY) - 1,
+            0b0110 => {
+                self.regs[rd as usize] = rn_value - operand + self.cpsr.at_bit(FLAG_CARRY) - 1
+            }
             0b1010 => {
                 // CMP Instruction
                 let value = rn_value as i32 - operand as i32;
@@ -323,5 +326,23 @@ mod test {
         cpu.regs[2] = 1;
         cpu.cpsr = cpu.cpsr.set_bit(FLAG_CARRY, true);
         assert_eq!(cpu.regs[1], 1);
+    }
+
+    #[test]
+    fn fibonacci_iteration() {
+        let mut cpu = CPU::default();
+
+        // Load 1 into r1
+        // Load 1 into r2
+        // r1 = 2
+        // r2 = 3
+        for (index, instr) in [0x011081E2, 0x012082E2, 0x021081E0, 0x012082E0].iter().enumerate() {
+            cpu.write_ram_u32(0x8000_0000 + index as u32, *instr);
+        }
+
+        for i in 0..4 {
+            cpu.step();
+        }
+        println!("{0:?}", cpu.regs);
     }
 }
