@@ -345,13 +345,20 @@ mod test {
         // Load 1 into r2
         // r1 = 2
         // r2 = 3
-        cpu.load_rom_bytes(vec![0x011081E2, 0x012082E2, 0x021081E0, 0x012082E0]);
+        // r1 = 5
+        // MOV r1, r5
+        cpu.load_rom_bytes(vec![
+            0x0110A0E3, 0x0120A0E3, 0x021081E0, 0x012082E0, 0x021081E0, 0x0150A0E1,
+        ]);
 
         println!("{0:?}", cpu.rom);
 
-        for i in 0..4 {
+        for i in 0..6 {
             cpu.step();
         }
         println!("{0:?}", cpu.regs);
+        println!("{0:x}", cpu.read_ram_u32(cpu.regs[REG_PC] - 4));
+
+        assert_eq!(cpu.regs[5], 5);
     }
 }
