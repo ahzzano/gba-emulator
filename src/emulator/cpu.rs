@@ -221,7 +221,7 @@ impl CPU {
 #[cfg(test)]
 mod test {
     use crate::{
-        emulator::cpu::{CPU, FLAG_CARRY, FLAG_ZERO, REG_LR, REG_PC, REG_SP},
+        emulator::cpu::{CPU, FLAG_CARRY, FLAG_ZERO, REG_LR, REG_PC},
         utils::bit_utils::{BitSetUtils, BitUtils},
     };
 
