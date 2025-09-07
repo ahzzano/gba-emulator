@@ -300,7 +300,7 @@ mod test {
     fn carry_intructions() {
         let mut cpu = CPU::default();
 
-        cpu.cpsr.set_bit(FLAG_CARRY, true);
+        cpu.cpsr = cpu.cpsr.set_bit(FLAG_CARRY, true);
         cpu.regs[1] = 1;
         cpu.regs[2] = 1;
 
@@ -309,7 +309,7 @@ mod test {
 
         cpu.regs[1] = 1;
         cpu.regs[2] = 1;
-        cpu.cpsr.set_bit(FLAG_CARRY, false);
+        cpu.cpsr = cpu.cpsr.set_bit(FLAG_CARRY, false);
 
         cpu.run_instr(0xE0A11002);
         println!("{0:?}", cpu.regs);
