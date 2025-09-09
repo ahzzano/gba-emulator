@@ -31,7 +31,7 @@ fn main() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
             break;
         }
-        if rl.is_key_pressed(KeyboardKey::KEY_F) {
+        if rl.is_key_down(KeyboardKey::KEY_F) {
             cpu.step();
             println!("{0:?}", cpu.regs);
         }
