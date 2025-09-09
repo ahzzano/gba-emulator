@@ -119,12 +119,19 @@ impl CPU {
             0b000 | 0b001 => {
                 self.exec_data_processing(instr);
             }
+            0b100 => {
+                self.exec_memory(instr);
+            }
             0b101 => {
                 // BRANCH
                 self.exec_branch(instr);
             }
             _ => unimplemented!(),
         }
+    }
+
+    fn exec_memory(&mut self, instr: u32) {
+
     }
 
     fn can_exec(&self, cond: u32) -> bool {
