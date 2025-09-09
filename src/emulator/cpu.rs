@@ -116,17 +116,10 @@ impl CPU {
         }
 
         match instr_type {
-            0b000 | 0b001 => {
-                self.exec_data_processing(instr);
-            }
+            0b000 | 0b001 => self.exec_data_processing(instr),
             0b011 | 0b010 => self.exec_memory_single(instr),
-            0b100 => {
-                self.exec_memory_block(instr);
-            }
-            0b101 => {
-                // BRANCH
-                self.exec_branch(instr);
-            }
+            0b100 => self.exec_memory_block(instr),
+            0b101 => self.exec_branch(instr),
             _ => unimplemented!(),
         }
     }
