@@ -130,7 +130,7 @@ impl CPU {
 
         let load = instr.at_bit(20) == 1;
         let indexing_mode = instr.at_bit(24);
-        let byte_word = instr.at_bit(22);
+        let byte_word = instr.at_bit(22) == 0;
         let write_back = instr.at_bit(21);
 
         let offset = if instr.at_bit(25) == 1 {
@@ -142,14 +142,23 @@ impl CPU {
         if load {
             let base = self.regs[rn as usize];
             let addr = base.wrapping_add(offset);
-            let word = self.read_ram_u32(addr);
+
+            let word = if byte_word {
+                self.read_ram_u8(addr) as u32
+            } else {
+                self.read_ram_u32(addr)
+            };
 
             self.regs[rd as usize] = word;
         } else {
             let base = self.regs[rn as usize];
             let addr = base.wrapping_add(offset);
 
-            self.write_ram_u32(addr, self.regs[rd as usize]);
+            if byte_word {
+                self.write_ram_u32(addr, self.regs[rd as usize]);
+            } else {
+                self.write_ram_u8(addr, (self.regs[rd as usize] & 0xFF) as u8);
+            }
         }
     }
 
