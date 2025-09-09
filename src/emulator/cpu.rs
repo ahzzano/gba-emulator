@@ -119,8 +119,9 @@ impl CPU {
             0b000 | 0b001 => {
                 self.exec_data_processing(instr);
             }
+            0b011 | 0b010 => self.ex,
             0b100 => {
-                self.exec_memory(instr);
+                self.exec_memory_block(instr);
             }
             0b101 => {
                 // BRANCH
@@ -130,9 +131,36 @@ impl CPU {
         }
     }
 
-    fn exec_memory(&mut self, instr: u32) {
+    fn exec_memory_single(&mut self, instr: u32) {
+        let rd = instr.get_bits(12, 15);
+        let rn = instr.get_bits(16, 19);
 
+        let load = instr.at_bit(20) == 1;
+        let indexing_mode = instr.at_bit(24);
+        let byte_word = instr.at_bit(22);
+        let write_back = instr.at_bit(21);
+
+        let offset = if instr.at_bit(25) == 1 {
+            instr.get_bits(0, 11)
+        } else {
+            0
+        };
+
+        if load {
+            let base = self.regs[rn as usize];
+            let addr = base.wrapping_add(offset);
+            let word = self.read_ram_u32(addr);
+
+            self.regs[rd as usize] = word;
+        } else {
+            let base = self.regs[rn as usize];
+            let addr = base.wrapping_add(offset);
+
+            self.write_ram_u32(addr, self.regs[rd as usize]);
+        }
     }
+
+    fn exec_memory_block(&mut self, instr: u32) {}
 
     fn can_exec(&self, cond: u32) -> bool {
         match cond {
