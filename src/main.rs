@@ -31,6 +31,9 @@ fn main() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
             break;
         }
+        if rl.is_key_down(KeyboardKey::KEY_F) {
+            cpu.step();
+        }
 
         let mut d = rl.begin_drawing(&thread);
 
