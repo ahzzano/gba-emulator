@@ -129,14 +129,24 @@ impl CPU {
         let rn = instr.get_bits(16, 19);
 
         let load = instr.at_bit(20) == 1;
-        let indexing_mode = instr.at_bit(24);
+        let indexing_mode = instr.at_bit(24) == 1;
         let byte_word = instr.at_bit(22) == 0;
-        let write_back = instr.at_bit(21);
+        let write_back = instr.at_bit(21) == 1;
 
         let offset = if instr.at_bit(25) == 1 {
             instr.get_bits(0, 11)
         } else {
             0
+        };
+
+        let base = self.regs[rn as usize];
+
+        let (addr, new_base) = if indexing_mode {
+            let new_addr = base.wrapping_add(offset);
+            (new_addr, new_addr)
+        } else {
+            let new_addr = base.wrapping_add(offset);
+            (base, new_addr)
         };
 
         if load {
@@ -159,6 +169,10 @@ impl CPU {
             } else {
                 self.write_ram_u8(addr, (self.regs[rd as usize] & 0xFF) as u8);
             }
+        }
+
+        if write_back {
+            self.regs[rn as usize] = new_base;
         }
     }
 
