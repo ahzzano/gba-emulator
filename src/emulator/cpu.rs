@@ -24,7 +24,7 @@ const RAM_SIZE: usize = 294_912;
 // Main Ref: https://problemkaputt.de/gbatek.htm#arminstructionsummary
 #[derive(Debug)]
 pub struct CPU {
-    regs: [u32; 16],
+    pub regs: [u32; 16],
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
@@ -55,7 +55,8 @@ impl Default for CPU {
 
 impl CPU {
     pub fn step(&mut self) {
-        let current_instr = self.read_ram_u32(self.regs[REG_PC]).to_be();
+        // let current_instr = self.read_ram_u32(self.regs[REG_PC]).to_be();
+        let current_instr = self.read_ram_u32(self.regs[REG_PC]);
         println!("{current_instr:08x}");
         self.run_instr(current_instr);
     }
@@ -63,6 +64,7 @@ impl CPU {
     pub fn load_rom(&mut self, mut file: File) {
         self.rom.clear();
         file.read_to_end(&mut self.rom).expect("Error reading file");
+        self.rom.append(&mut vec![0; 32]);
     }
 
     pub fn load_rom_bytes(&mut self, vec: Vec<u32>) {
@@ -112,6 +114,7 @@ impl CPU {
         let cond = instr.get_bits(28, 31);
         let instr_type = instr.get_bits(25, 27);
         if !self.can_exec(cond) {
+            self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
             return;
         }
 
@@ -174,6 +177,7 @@ impl CPU {
         if write_back {
             self.regs[rn as usize] = new_base;
         }
+        self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
     }
 
     fn exec_memory_block(&mut self, instr: u32) {}
@@ -274,7 +278,7 @@ impl CPU {
                 );
             }
             _ => {
-                unimplemented!()
+                ()
             }
         }
 
