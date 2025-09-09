@@ -119,7 +119,7 @@ impl CPU {
             0b000 | 0b001 => {
                 self.exec_data_processing(instr);
             }
-            0b011 | 0b010 => self.ex,
+            0b011 | 0b010 => self.exec_memory_single(instr),
             0b100 => {
                 self.exec_memory_block(instr);
             }
