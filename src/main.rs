@@ -1,5 +1,9 @@
 use raylib::prelude::*;
-use std::fs::{self, File};
+use std::{
+    fs::{self, File},
+    thread::sleep,
+    time::Duration,
+};
 
 pub mod emulator;
 pub mod utils;
@@ -40,5 +44,7 @@ fn main() {
 
         d.clear_background(Color::WHITE);
         d.draw_text("Hello, world!", 12, 12, 20, Color::BLACK);
+
+        sleep(Duration::from_millis(2));
     }
 }
