@@ -1,6 +1,9 @@
 use raylib::prelude::*;
 use std::{
-    fmt::format, fs::{self, File}, thread::sleep, time::Duration
+    fmt::format,
+    fs::{self, File},
+    thread::sleep,
+    time::Duration,
 };
 
 pub mod emulator;
@@ -43,12 +46,25 @@ fn main() {
         d.clear_background(Color::WHITE);
         d.draw_text(&format!("{filepath}"), 12, 12, 20, Color::BLACK);
 
-        for i in 0..16  {
+        for i in 0..16 {
             // d.draw_text(&format!("r{i}: {:08x}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
-            d.draw_text(&format!("r{i}: {}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
+            let string = match i {
+                15 => format!("pc: {:08x}", cpu.regs[i]),
+                14 => format!("lr: {:08x}", cpu.regs[i]),
+                13 => format!("sp: {:08x}", cpu.regs[i]),
+                _ => format!("r{i}: {}", cpu.regs[i]),
+            };
+            d.draw_text(&string, 12, 40 + 20 * i as i32, 20, Color::BLACK);
         }
 
-        cpu.step();
-        sleep(Duration::from_millis(50));
+        let instr = cpu.step();
+        d.draw_text(
+            &format!("Instruction: {instr:032b}"),
+            128,
+            40,
+            20,
+            Color::BLACK,
+        );
+        sleep(Duration::from_millis(150));
     }
 }

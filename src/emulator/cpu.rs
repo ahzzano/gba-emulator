@@ -54,11 +54,12 @@ impl Default for CPU {
 }
 
 impl CPU {
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> u32 {
         // let current_instr = self.read_ram_u32(self.regs[REG_PC]).to_be();
         let current_instr = self.read_ram_u32(self.regs[REG_PC]);
         println!("{current_instr:08x}");
         self.run_instr(current_instr);
+        return current_instr;
     }
 
     pub fn load_rom(&mut self, mut file: File) {
@@ -307,7 +308,7 @@ impl CPU {
                     ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
                 );
             }
-            _ => (),
+            _ => unimplemented!(),
         }
 
         self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
