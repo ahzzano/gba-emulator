@@ -44,10 +44,11 @@ fn main() {
         d.draw_text(&format!("{filepath}"), 12, 12, 20, Color::BLACK);
 
         for i in 0..16  {
-            d.draw_text(&format!("r{i}: {:08x}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
+            // d.draw_text(&format!("r{i}: {:08x}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
+            d.draw_text(&format!("r{i}: {}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
         }
 
         cpu.step();
-        sleep(Duration::from_millis(200));
+        sleep(Duration::from_millis(50));
     }
 }

@@ -1,8 +1,8 @@
-all: counter
+counter fibonacci:
+	arm-none-eabi-as -mcpu=arm7tdmi -EL -o test_files/$@.o test_files/$@.s
+	arm-none-eabi-objcopy -O binary test_files/$@.o test_files/$@.gba
+	mv test_files/$@.gba ./$@.gba
 
-counter:
-	arm-none-eabi-as -mcpu=arm7tdmi -EL -o test_files/counter.o test_files/counter.s
-	arm-none-eabi-objcopy -O binary test_files/counter.o test_files/counter.gba
-	cp test_files/counter.gba ./counter.gba
-
+clean:
+	rm test_files/*.o
 
