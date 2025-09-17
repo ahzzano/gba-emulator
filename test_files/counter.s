@@ -7,6 +7,7 @@ _start:
     MOV r2, #10            @ max = 10
 
 loop:
+    adds     r1, r1, #1
     subs    r2, r2, #1
     bne     loop
 
