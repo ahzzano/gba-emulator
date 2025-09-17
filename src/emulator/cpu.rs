@@ -24,7 +24,7 @@ const RAM_SIZE: usize = 294_912;
 // Main Ref: https://problemkaputt.de/gbatek.htm#arminstructionsummary
 #[derive(Debug)]
 pub struct CPU {
-    regs: [u32; 16],
+    pub regs: [u32; 16],
     cpsr: u32,
     spsr: [u32; 6],
     bus: Box<Bus>,
@@ -54,13 +54,25 @@ impl Default for CPU {
 }
 
 impl CPU {
-    pub fn step() {
-        todo!()
+    pub fn step(&mut self) {
+        // let current_instr = self.read_ram_u32(self.regs[REG_PC]).to_be();
+        let current_instr = self.read_ram_u32(self.regs[REG_PC]);
+        println!("{current_instr:08x}");
+        self.run_instr(current_instr);
     }
 
     pub fn load_rom(&mut self, mut file: File) {
         self.rom.clear();
         file.read_to_end(&mut self.rom).expect("Error reading file");
+        self.rom.append(&mut vec![0; 32]);
+    }
+
+    pub fn load_rom_bytes(&mut self, vec: Vec<u32>) {
+        self.rom = vec
+            .iter()
+            .map(|v_u32| v_u32.to_le_bytes().to_vec())
+            .flatten()
+            .collect();
     }
 
     pub fn write_ram_u8(&mut self, addr: u32, value: u8) {
@@ -102,20 +114,73 @@ impl CPU {
         let cond = instr.get_bits(28, 31);
         let instr_type = instr.get_bits(25, 27);
         if !self.can_exec(cond) {
+            self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
             return;
         }
 
         match instr_type {
-            0b000 | 0b001 => {
-                self.exec_data_processing(instr);
-            }
-            0b101 => {
-                // BRANCH
-                self.exec_branch(instr);
-            }
+            0b000 | 0b001 => self.exec_data_processing(instr),
+            0b011 | 0b010 => self.exec_memory_single(instr),
+            0b100 => self.exec_memory_block(instr),
+            0b101 => self.exec_branch(instr),
             _ => unimplemented!(),
         }
     }
+
+    fn exec_memory_single(&mut self, instr: u32) {
+        let rd = instr.get_bits(12, 15);
+        let rn = instr.get_bits(16, 19);
+
+        let load = instr.at_bit(20) == 1;
+        let indexing_mode = instr.at_bit(24) == 1;
+        let byte_word = instr.at_bit(22) == 0;
+        let write_back = instr.at_bit(21) == 1;
+
+        let offset = if instr.at_bit(25) == 1 {
+            instr.get_bits(0, 11)
+        } else {
+            0
+        };
+
+        let base = self.regs[rn as usize];
+
+        let (addr, new_base) = if indexing_mode {
+            let new_addr = base.wrapping_add(offset);
+            (new_addr, new_addr)
+        } else {
+            let new_addr = base.wrapping_add(offset);
+            (base, new_addr)
+        };
+
+        if load {
+            let base = self.regs[rn as usize];
+            let addr = base.wrapping_add(offset);
+
+            let word = if byte_word {
+                self.read_ram_u8(addr) as u32
+            } else {
+                self.read_ram_u32(addr)
+            };
+
+            self.regs[rd as usize] = word;
+        } else {
+            let base = self.regs[rn as usize];
+            let addr = base.wrapping_add(offset);
+
+            if byte_word {
+                self.write_ram_u32(addr, self.regs[rd as usize]);
+            } else {
+                self.write_ram_u8(addr, (self.regs[rd as usize] & 0xFF) as u8);
+            }
+        }
+
+        if write_back {
+            self.regs[rn as usize] = new_base;
+        }
+        self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
+    }
+
+    fn exec_memory_block(&mut self, instr: u32) {}
 
     fn can_exec(&self, cond: u32) -> bool {
         match cond {
@@ -168,7 +233,7 @@ impl CPU {
         let opcode = instr.get_bits(21, 24);
         let s = instr.at_bit(20);
         println!("Data Processing Instr: {instr:0x}");
-        println!("Opcode: {opcode}");
+        println!("Opcode: {opcode:04b}");
 
         let operand = if (kind & 0x1) == 1 {
             // immediate
@@ -188,17 +253,49 @@ impl CPU {
         let rn_value = self.regs[rn as usize];
 
         match opcode {
-            0b0100 => self.regs[rd as usize] = rn_value + operand,
-            0b1101 => self.regs[rd as usize] = operand,
+            0b0100 => {
+                // ADD
+                let (value, flag) = rn_value.overflowing_add(operand);
+                self.regs[rd as usize] = value;
+
+                if flag || s != 0 {
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value > operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                    self.cpsr = self.cpsr.set_bit(
+                        FLAG_OVERFLOW,
+                        ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
+                    );
+                }
+            }
+            0b1101 => {
+                // MOV
+                self.regs[rd as usize] = operand;
+                if s != 0 {
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value < operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                }
+
+            }
             0b0010 => {
+                // SUB
                 let (value, flag) = rn_value.overflowing_sub(operand);
                 self.regs[rd as usize] = value;
-                if flag && s != 0 {
-                    todo!("Implement SUBS, ADDS, and MOVS respectively");
+                if flag || s != 0 {
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value < operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                    self.cpsr = self.cpsr.set_bit(
+                        FLAG_OVERFLOW,
+                        ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
+                    );
                 }
             }
             0b0101 => self.regs[rd as usize] = rn_value + operand + self.cpsr.at_bit(FLAG_CARRY),
-            0b0110 => self.regs[rd as usize] = rn_value - operand + self.cpsr.at_bit(FLAG_CARRY) - 1,
+            0b0110 => {
+                self.regs[rd as usize] = rn_value - operand + self.cpsr.at_bit(FLAG_CARRY) - 1
+            }
             0b1010 => {
                 // CMP Instruction
                 let value = rn_value as i32 - operand as i32;
@@ -210,9 +307,7 @@ impl CPU {
                     ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
                 );
             }
-            _ => {
-                unimplemented!()
-            }
+            _ => (),
         }
 
         self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);

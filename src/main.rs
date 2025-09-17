@@ -1,5 +1,7 @@
 use raylib::prelude::*;
-use std::fs::{self, File};
+use std::{
+    fmt::format, fs::{self, File}, thread::sleep, time::Duration
+};
 
 pub mod emulator;
 pub mod utils;
@@ -31,10 +33,22 @@ fn main() {
         if rl.is_key_down(KeyboardKey::KEY_Q) {
             break;
         }
+        // if rl.is_key_pressed(KeyboardKey::KEY_F) {
+        //     cpu.step();
+        //     println!("{0:?}", cpu.regs);
+        // }
 
         let mut d = rl.begin_drawing(&thread);
 
         d.clear_background(Color::WHITE);
-        d.draw_text("Hello, world!", 12, 12, 20, Color::BLACK);
+        d.draw_text(&format!("{filepath}"), 12, 12, 20, Color::BLACK);
+
+        for i in 0..16  {
+            // d.draw_text(&format!("r{i}: {:08x}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
+            d.draw_text(&format!("r{i}: {}", cpu.regs[i]), 12, 40 + 20 * i as i32, 20, Color::BLACK);
+        }
+
+        cpu.step();
+        sleep(Duration::from_millis(50));
     }
 }
