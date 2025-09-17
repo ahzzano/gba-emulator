@@ -258,8 +258,15 @@ impl CPU {
             0b0010 => {
                 let (value, flag) = rn_value.overflowing_sub(operand);
                 self.regs[rd as usize] = value;
-                if flag && s != 0 {
-                    todo!("Implement SUBS, ADDS, and MOVS respectively");
+                if flag || s != 0 {
+                    // todo!("Implement SUBS, ADDS, and MOVS respectively");
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value < operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                    self.cpsr = self.cpsr.set_bit(
+                        FLAG_OVERFLOW,
+                        ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
+                    );
                 }
             }
             0b0101 => self.regs[rd as usize] = rn_value + operand + self.cpsr.at_bit(FLAG_CARRY),
@@ -277,9 +284,7 @@ impl CPU {
                     ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
                 );
             }
-            _ => {
-                ()
-            }
+            _ => (),
         }
 
         self.regs[REG_PC] = self.regs[REG_PC].wrapping_add(4);
