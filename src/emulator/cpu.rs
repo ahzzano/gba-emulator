@@ -253,12 +253,13 @@ impl CPU {
         let rn_value = self.regs[rn as usize];
 
         match opcode {
-            0b0100 =>  {
+            0b0100 => {
+                // ADD
                 let (value, flag) = rn_value.overflowing_add(operand);
                 self.regs[rd as usize] = value;
 
                 if flag || s != 0 {
-                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value < operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value > operand);
                     self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
                     self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
                     self.cpsr = self.cpsr.set_bit(
@@ -266,10 +267,19 @@ impl CPU {
                         ((rn_value ^ operand) & (rn_value ^ value as u32)) >> 31 == 1,
                     );
                 }
+            }
+            0b1101 => {
+                // MOV
+                self.regs[rd as usize] = operand;
+                if s != 0 {
+                    self.cpsr = self.cpsr.set_bit(FLAG_SIGN, rn_value < operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_ZERO, rn_value == operand);
+                    self.cpsr = self.cpsr.set_bit(FLAG_CARRY, rn_value >= operand);
+                }
 
-            },
-            0b1101 => self.regs[rd as usize] = operand,
+            }
             0b0010 => {
+                // SUB
                 let (value, flag) = rn_value.overflowing_sub(operand);
                 self.regs[rd as usize] = value;
                 if flag || s != 0 {
